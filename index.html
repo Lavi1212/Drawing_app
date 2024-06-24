@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ColoringPage</title>
+  <style>
+
+      body {
+
+  font-family: Arial, sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  background-image: url('C:/Users/Lavi/Desktop/Final_Project/finalProj/icon/background.jpeg'); /* Add this line */
+  background-size: cover; /* Ensure the background image covers the entire area */
+  background-position: center; /* Center the background image */
+  background-repeat: no-repeat; /* Prevent the background image from repeating */
+  background-attachment: fixed; /* Ensure the background image stays fixed during scrolling */
+}
+
+.container {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+
+/*canvas picture*/
+#canvas-container {
+  position: static;
+  width: 900px; /* Set fixed width for the canvas container */
+  height: 450px; /* Set fixed height for the canvas container */
+  /* Adjust the top position to move it lower */
+  margin-top: 80px;
+  margin-left: 120px;
+  border: 5px solid rgb(6, 0, 11);
+  border-radius: 5px;
+  overflow: hidden;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+
+.color-pick {
+  max-width: auto;
+  max-height:450px;
+}
+
+/*column right- reset undo and save*/
+.button-container1 {
+  position: static; /* Change to static positioning */
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adjust gap between columns */
+  align-items: flex-start; /* Align items to the start */
+  margin-top: -450px; /* Adjust top margin as needed */
+  margin-left: 10px; /* Adjust left margin as needed */
+}
+
+.button-container1 > div {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adjust gap between buttons */
+}
+
+.button-container1 button {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #000;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+input[type="file"] {
+  color: transparent;
+  width: 100px;
+  height: 100px;
+
+}
+
+input[type="file"]::-webkit-file-upload-button {
+  width: 100px;
+  height: 100px;
+  border: 2px solid #000;
+  border-radius: 5px;
+  cursor: pointer;
+
+}
+
+/*zoom in and out and Drag*/
+.button-container2 {
+  position: static;
+  display: flex;
+  flex-direction: row; /* Arrange items in a row */
+  margin-top: -500px;
+  margin-left: 500px;
+  transform: translateX(-50%); /* Center horizontally using transform */
+  width: 320px; /* Allow width to adjust based on content */
+  height: auto; /* Allow height to adjust based on content */
+  gap: 10px; /* Add space between the squares */
+}
+
+.button-container2 > div {
+  width: 100px; /* Set a fixed width for the color palette */
+  height: 50px; /* Set a fixed height for the color palette */
+  border: 2px solid #000; /* Add border around the color palette */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  display: flex;
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+  background-color: white; /* Optional: Set background color */
+}
+
+
+/*column left- pen eraser figures*/
+
+.button-container3 {
+  position: static;
+  margin-top: 230px;
+  margin-left:1050px;
+  transform: translateY(-50%);
+  flex-direction: column;;
+}
+.button-container3 > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0px; /* Add gap between buttons */
+}
+
+.button-container3 button {
+  width: 100px; /* Set width for each color option */
+  height: 100px; /* Set height for each color option */
+  border: 2px solid #000; /* Add border around each color option */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  margin-bottom: 10px; /* Adjust margin between color options */
+  cursor: pointer;
+}
+.button-container3 img {
+  width: 100%; /* Ensure image fills the square button */
+  height: 100%; /* Ensure image fills the square button */
+}
+
+
+/* Hide the figures palette by default */
+.palette-container {
+  display: none;
+}
+.palette-container {
+  position: absolute;
+  top: -3px;
+  left: -150px; 
+  width: 100px; /* Set the width */
+  height: 428px; /* Set the height */
+  background-color: white;
+  border: 5px solid #000;
+  border-radius: 5px;
+  padding: 10px;
+  overflow-y: hidden; /* Add scrollbars if content exceeds height */
+  z-index: 10; /* Ensure it appears on top of other elements */
+}
+
+
+.palette-container.show {
+  display: flex; /* Show the figures palette when the "show" class is added */
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.palette-container button {
+  width: 100px; /* Set width for each figure button */
+  height: 100px; /* Set height for each figure button */
+  border: 2px solid #000; /* Add border around each figure button */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  cursor: pointer;
+}
+
+
+/*color picker*/
+#colorPicker {
+  display: none;
+}
+#color-palette-container {
+  display: none;
+}
+.color-palette {
+    position: absolute;
+    display: flex;
+    flex-direction: row; /* Arrange items in a row */
+    left: 800px; /* Center horizontally */
+    top: 39px; /* Adjust the top position to move it lower */
+    transform: translateX(-50%); /* Center horizontally using transform */
+    width: 100px; /* Set a fixed width for the color palette */
+    height: 50px; /* Set a fixed height for the color palette */
+    border: 2px solid rgb(5, 0, 8); /* Add border around the color palette */
+    border-radius: 5px; /* Add border radius for rounded corners */
+    align-items: center; /* Center content vertically */
+    justify-content: center; /* Center content horizontally */
+    background-color: white; /* Optional: Set background color */
+}
+
+
+
+
+#secondaryColorPalette {
+  position: fixed;
+  top: 50%; /* Adjusted to 50% to center vertically */
+  left: 50%; /* Adjusted to 50% to center horizontally */
+  transform: translate(-48%, -43%); /* Center the palette */
+  width:1300px;
+  height:700px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  background-color:  #d1e2f9;
+  padding: 20px;
+  display: flex;
+  flex-direction: row; /* Display columns horizontally */
+  justify-content: space-between; /* Distribute columns evenly along the row */
+}
+.color-column {
+  display: inline-block;
+  flex-direction: column; /* Stack color options vertically */
+}
+
+.color-option {
+  width: 100px; /* Set a fixed width for each color option */
+  height: 100px; /* Set a fixed height for each color option */
+  border: 5px solid #000;
+  border-radius: 20px;
+  margin: 20px;
+}
+.color-option:hover {
+  transform: scale(1.1);
+}
+
+
+
+
+
+/* brush size */
+.brush-size-container {
+  position: static;
+  display: flex;
+  flex-direction: row; /* Arrange items in a row */
+  margin-top:-515px;
+  margin-left:100px;
+  width: auto; /* Allow width to adjust based on content */
+  height: auto; /* Allow height to adjust based on content */
+}
+
+#toggleBrushSizeButtons {
+  position: static;
+  margin-top: -5px;
+  margin-left: 830px;
+  transform: translateX(-50%); /* Center horizontally using transform */
+  width: 100px; /* Set a fixed width for the color palette */
+  height: 53px; /* Set a fixed height for the color palette */
+  border: 2px solid rgb(5, 0, 8); /* Add border around the color palette */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+  background-color: white; /* Optional: Set background color */
+}
+
+.brush-size-frame {
+  display: none; /* Hide by default */
+  position: absolute;
+  top: 30px; /* Adjust the top position */
+  width: 1200px; /* Set the width */
+  height: 450px; /* Set the height */
+  left: 0px; /* Center horizontally */
+  background-color: #d1e2f9;
+  border: 2px solid #000;
+  border-radius: 5px;
+  padding: 10px;
+  overflow-y: auto; /* Add scrollbars if content exceeds height */
+  z-index: 10;
+}
+
+.brush-size-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.brush-size-buttons button {
+  width: 70px;
+  height: 400px;
+  border: 2px solid #000;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-direction: column; /* Align items vertically */
+}
+
+.brush-size-buttons button:hover {
+  background-color: #ddd;
+}
+
+#brushSizeValue {
+  margin-top: 10px;
+  margin-left: -30px;
+  font-size: 16px;
+
+}
+
+/* Special button styling for all buttons */
+.special-button {
+  justify-content: space-between; /* Space out the content vertically */
+  padding: 10px 0; /* Add padding to space the content inside */
+  align-items: center; /* Center items horizontally */
+}
+
+.special-button .button-text {
+  margin-bottom: auto; /* Push text to the top */
+  font-size: 18px; /* Adjust font size as needed */
+}
+
+.special-button .button-image {
+  max-width: 50px; /* Adjust image size as needed */
+  height: 400px; /* Set height to 400px */
+  object-fit: contain; /* Ensure the image fits within the height while maintaining aspect ratio */
+}
+
+
+/*settings*/
+.settings-container{
+  position: absolute;
+  display: flex;
+  flex-direction: row; /* Arrange items in a row */
+  left: 200px; /* Center horizontally */
+  top: 40px; /* Adjust the top position to move it lower */
+  transform: translateX(-50%); /* Center horizontally using transform */
+  gap: 10px; /* Add space between the squares */
+}
+
+.settings-container> div {
+  width: 95px; /* Set a fixed width for the color palette */
+  height: 50px; /* Set a fixed height for the color palette */
+  border: 2px solid #000; /* Add border around the color palette */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  display: flex;
+  align-items: center; /* Center content vertically */
+  justify-content: center; /* Center content horizontally */
+  background-color: white; /* Optional: Set background color */
+}
+
+
+.settings-screen {
+  display: none; /* Hide by default */
+  position: absolute;
+  top: -20px; /* Adjust the top position */
+  width: 1200px; /* Set the width */
+  height: 550px; /* Set the height */
+  left: -150px; /* Center horizontally */
+  background-color: #d1e2f9;
+  border: 2px solid #000;
+  border-radius: 5px;
+  padding: 10px;
+  overflow-y: auto; /* Add scrollbars if content exceeds height */
+}
+
+.settings-screen1 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  flex-direction: column; /* Change to column layout */
+}
+
+.settings-screen1 button {
+  width: 70px;
+  border: 2px solid #000;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-direction: column; /* Change to column layout */
+}
+
+.settings-screen1 button:hover {
+  background-color: #ddd;
+}
+
+#setting1 {
+  width: 100%; /* Make the button fill its container width */
+  height: 40px; /* Set button height */
+  margin-bottom: 10px; /* Add margin at the bottom */
+  border: 2px solid #000; /* Add border */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  background-color: #fff; /* Set background color */
+  color: #000; /* Set text color */
+  font-size: 16px; /* Adjust font size */
+  cursor: pointer; /* Show pointer cursor on hover */
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+}
+
+#setting1:hover {
+  background-color: #ddd; /* Change background color on hover */
+}
+
+.timesetting-buttons {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  margin-top: -10px; /* Adjust top margin as needed */
+  gap: 5px; /* Space between buttons */
+}
+
+.timesetting-button {
+  width: 100px; /* Adjust button width as needed */
+  height: 40px; /* Adjust button height as needed */
+  /* Remove margin here to use gap property */
+  border: 2px solid #000;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.timesetting-button:hover {
+  background-color: #ddd;
+}
+
+
+#setting2 {
+  width: 100%; /* Make the button fill its container width */
+  height: 40px; /* Set button height */
+  margin-bottom: 10px; /* Add margin at the bottom */
+  border: 2px solid #000; /* Add border */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  background-color: #fff; /* Set background color */
+  color: #000; /* Set text color */
+  font-size: 16px; /* Adjust font size */
+  cursor: pointer; /* Show pointer cursor on hover */
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+}
+
+#setting2:hover {
+  background-color: #ddd; /* Change background color on hover */
+}
+
+.thresholdsetting-buttons {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  margin-top: -10px; /* Adjust top margin as needed */
+  gap: 5px; /* Space between buttons */
+
+}
+
+.thresholdsetting-button {
+  width: 100px; /* Adjust button width as needed */
+  height: 40px; /* Adjust button height as needed */
+  /* Remove margin here to use gap property */
+  border: 2px solid #000;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.thresholdsetting-button:hover {
+  background-color: #ddd;
+}
+
+
+#musicsetting {
+  width: 100%; /* Make the button fill its container width */
+  height: 40px; /* Set button height */
+  margin-bottom: 10px; /* Add margin at the bottom */
+  border: 2px solid #000; /* Add border */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  background-color: #fff; /* Set background color */
+  color: #000; /* Set text color */
+  font-size: 16px; /* Adjust font size */
+  cursor: pointer; /* Show pointer cursor on hover */
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+}
+
+#musicsetting:hover {
+  background-color: #ddd; /* Change background color on hover */
+}
+.music-player {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  margin-top: -10px; /* Adjust top margin as needed */
+  gap: 5px; /* Space between buttons */
+
+}
+
+
+
+#leveldraw {
+  width: 100%; /* Make the button fill its container width */
+  height: 40px; /* Set button height */
+  margin-bottom: 10px; /* Add margin at the bottom */
+  border: 2px solid #000; /* Add border */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  background-color: #fff; /* Set background color */
+  color: #000; /* Set text color */
+  font-size: 16px; /* Adjust font size */
+  cursor: pointer; /* Show pointer cursor on hover */
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+}
+
+#leveldraw:hover {
+  background-color: #ddd; /* Change background color on hover */
+}
+
+.leveldrawbuttons {
+  display: flex;
+  justify-content: center; /* Center buttons horizontally */
+  margin-top: -10px; /* Adjust top margin as needed */
+  gap: 5px; /* Space between buttons */
+}
+
+.leveldraw-button {
+  width: 100px; /* Adjust button width as needed */
+  height: 40px; /* Adjust button height as needed */
+  border: 2px solid #000;
+  border-radius: 5px;
+  background-color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.leveldraw-button:hover {
+  background-color: #ddd;
+}
+
+body.secondary-palette-visible .brush-size-container,
+body.secondary-palette-visible .settings-container {
+  display: none;
+}
+    
+  </style>
+  
+</head>
+<body>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+  
+  <div class="container">
+    <div id="canvas-container">
+      <canvas id="imageCanvas" width="900" height="450" willReadFrequently></canvas>
+    </div>
+
+  <div class="color-pick">
+    <div id="canvas-container1">
+      <input type="color" id="colorPicker" value="#007bff">
+    </div>
+
+    <div class="button-container1">
+      <div>
+        <input type="file" id="fileInput" accept="image/*">
+        <button onclick="resetImage()">Reset Image</button>
+        <button id="undoButton">Undo</button>
+        <button id="saveButton">Save Image</button> <!-- Added Save Image button -->
+
+      </div>
+    </div>
+
+    <div class="button-container2">
+      <div>
+        <button id="ZoomIn">Zoom In</button>
+      </div>
+      <div>
+        <button id="ZoomOut">Zoom Out</button>
+      </div>
+      <div>
+        <button id="Drag">Drag</button>
+      </div>
+    </div>
+
+
+
+
+    <div class="button-container3">
+      <div>
+        <button onclick="switchToPen()"><img src="fill-color-icon.png" alt="Pen"></button>
+        <button onclick="switchToEraser()"><img src="eraser-icon1.png" alt="Eraser"></button>
+        <button onclick="switchToPencil()"><img src="pen-icon.png" alt="Pencil"></button>
+        <button onclick="toggleFigures()"><img src="shape-icon.png" alt="shape-icon"></button>
+    <div id="figures-container" class="palette-container">
+      <button onclick="switchToRectangle()"><img src="rectangle.png" alt="Rectangle"></button>
+      <button onclick="switchToCircle()"><img src="circle-icon.png" alt="circle-icon"></button>
+      <button onclick="switchToTriangle()"><img src="triangle-icon.png" alt="triangle-icon"></button>
+     <button onclick="switchToLine()"><img src="line-icon.jpg" alt="line-icon"></button>
+          </div>
+      </div>
+    </div>
+
+
+    
+    <div class="color-palette" id="mainColorPalette">
+      <button onclick="selectColor('#FF0000')">color</button>
+    </div>
+    <div class="color-palette" id="secondaryColorPalette" style="display: none;"></div>
+    </div>
+
+
+
+    
+   <div class="brush-size-container">
+      <button id="toggleBrushSizeButtons">Choose Brush Size</button>
+        <div id="brushSizeFrame" class="brush-size-frame">
+      <div class="brush-size-buttons">
+        <button onclick="setBrushSize(1)" class="special-button">
+          <span class="button-text">1</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau1.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(2)" class="special-button">
+          <span class="button-text">2</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau2.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(3)" class="special-button">
+          <span class="button-text">3</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau3.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(4)" class="special-button">
+          <span class="button-text">4</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau4.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(5)" class="special-button">
+          <span class="button-text">5</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau5.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(6)" class="special-button">
+          <span class="button-text">6</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau6.jpeg"" class="button-image">
+        </button>
+        <button onclick="setBrushSize(7)" class="special-button">
+          <span class="button-text">7</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau7.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(8)" class="special-button">
+          <span class="button-text">8</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau8.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(9)" class="special-button">
+          <span class="button-text">9</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau9.jpeg" class="button-image">
+        </button>
+        <button onclick="setBrushSize(10)" class="special-button">
+          <span class="button-text">10</span>
+          <img src="C:\Users\Lavi\Desktop\Final_Project\finalProj\icon\pinceau10.jpeg" class="button-image">
+        </button>
+      </div>
+    </div>
+    <span id="brushSizeValue">1</span>
+  </div>
+  
+  <div class="settings-container">
+    <div>
+    <button id="settingsbutton">Settings</button>
+    <div id="settingsscreen" class="settings-screen">
+      <div class="settings-screen1">
+        <button id="setting1">Time Setting-button</button>
+        <div class="timesetting-buttons">
+          <button class="timesetting-button" data-value="10">10</button>
+          <button class="timesetting-button" data-value="100">100</button>
+          <button class="timesetting-button" data-value="500">500</button>
+          <button class="timesetting-button" data-value="1000">1000</button>
+          <button class="timesetting-button" data-value="2000">2000</button>
+          <button class="timesetting-button" data-value="3000">3000</button>
+        </div>
+        <button id="setting2">Threshold Setting-button</button>
+        <div class="thresholdsetting-buttons">
+          <button class="thresholdsetting-button" data-value="10">10</button>
+          <button class="thresholdsetting-button" data-value="20">20</button>
+          <button class="thresholdsetting-button" data-value="30">30</button>
+          <button class="thresholdsetting-button" data-value="40">40</button>
+          <button class="thresholdsetting-button" data-value="50">50</button>
+          <button class="thresholdsetting-button" data-value="60">60</button>
+        </div>
+        <button id="musicsetting">Music Setting-button</button>
+        <div class="music-player">
+          <audio id="musicPlayer" src="C:\Users\Leana Assouline\Desktop\finalProj\media\music.mp3"></audio>
+          <button id="playButton">Play Music</button>
+          <button id="pauseButton">Pause Music</button>
+          <button id="stopButton">Stop Music</button>
+        </div>
+        
+        <button id="leveldraw">Your Level</button>
+        <div class="leveldrawbuttons">
+          <button class="leveldraw-button" data-value="1">1</button>
+          <button class="leveldraw-button" data-value="2">2</button>
+          <button class="leveldraw-button" data-value="3">3</button>
+        </div>
+
+        <button id="downloadBtn">Download Matrix</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <div id="plot1"></div>
+  <div id="plot2"></div>
+
+  <script src="js.js"></script>
+</body>
+</html>
+
+
+
