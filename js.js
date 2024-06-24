@@ -213,11 +213,11 @@ if (row==100){
         ctx.moveTo(startX, startY); // Moves the starting point of the path to the specified coordinates
         ctx.lineTo(currentX, currentY); // Draws a straight line from the current position to the specified end point
         ctx.stroke();
-    }else if (isTriangleMode) { // Draw Triangle
+    } else if (isTriangleMode){ //Draw Triangle
         ctx.beginPath();
         ctx.moveTo(startX, startY); // Move to the first vertex of the triangle
         ctx.lineTo(currentX, currentY); // Draw a line to the second vertex based on mouse position
-        ctx.lineTo(2 * startX - currentX, currentY); // Draw a line to the third vertex to make it isosceles
+        ctx.lineTo(startX * 2 - startX, currentY); // Draw a line to the third vertex based on mouse position
         ctx.closePath();
         ctx.stroke();
     }
@@ -271,9 +271,9 @@ let yEnd = Math.min(canvas.height, mouseY + Math.ceil(rectHeight / 2));
 let rows_up_zero = Math.max(0,Math.floor(rectHeight / 2) - mouseY);
 let columns_left_zero = Math.max(0,  Math.floor(rectWidth / 2) - mouseX );
 
-//console.log("flag", flag);
-//console.log("mouseX:", mouseX);
-//console.log("mouseY:", mouseY);
+console.log("flag", flag);
+console.log("mouseX:", mouseX);
+console.log("mouseY:", mouseY);
 //console.log("xStart:", xStart);
 //console.log("yStart:", yStart);
 //console.log("xEnd:", xEnd);
@@ -431,7 +431,7 @@ function handleFileSelect(event) {
                 originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 originalImageData = adjustBrightness(originalImageData);
                 ctx.putImageData(originalImageData, 0, 0);
-            }
+            };
             img.src = event.target.result; // Set the source of the image to the result of FileReader
         };
 
@@ -546,17 +546,6 @@ function lightenDarkenColor(col, amt) {
 
 
 
-function toggleFigures() {
-    var figuresContainer = document.getElementById("figures-container");
-    if (figuresContainer.style.display === "none" || figuresContainer.style.display === "") {
-        figuresContainer.style.display = "block";
-    } else {
-        figuresContainer.style.display = "none";
-    }
-}
-
-
-
   function interpolateColor(colorStart, colorEnd, step, steps) {
     // Parse the hex color codes
     let start = parseInt(colorStart.slice(1), 16);
@@ -580,33 +569,42 @@ function toggleFigures() {
     return '#' + (r << 16 | g << 8 | b).toString(16).padStart(6, '0');
 }
 
-// Function to populate the figures palette. 
-function populateFigurePalette() {
-var figuresContainer = document.getElementById("figures-container");
-figuresContainer.innerHTML = ""; // Clear any existing content
-
-// Define figure buttons
-var figures = [
-  { name: "Rectangle", action: switchToRectangle },
-  { name: "Circle", action: switchToCircle },
-  { name: "Line", action: switchToLine }
-];
-
-// Create and append figure buttons
-figures.forEach(function(figure) {
-  var button = document.createElement("button");
-  button.textContent = figure.name;
-  button.onclick = figure.action; // Assign the corresponding function to onclick
-  figuresContainer.appendChild(button);
-});
+function toggleFigures() {
+    var figuresContainer = document.getElementById("figures-container");
+    if (figuresContainer.style.display === "none" || figuresContainer.style.display === "") {
+        figuresContainer.style.display = "block";
+    } else {
+        figuresContainer.style.display = "none";
+    }
 }
 
-
-// Function to clear the figures palette
 function clearFigurePalette() {
-var figuresContainer = document.getElementById("figures-container");
-figuresContainer.innerHTML = ""; // Clear any existing content
+    var figuresContainer = document.getElementById("figures-container");
+    figuresContainer.style.display = "none";
 }
+
+// Function to hide figures container when a figure is selected
+function hideFiguresContainer() {
+    var figuresContainer = document.getElementById("figures-container");
+    figuresContainer.style.display = "none";
+}
+
+// Assign the new hide function to the figure buttons
+function assignHideFunction() {
+    var figureButtons = document.querySelectorAll('#figures-container button');
+    figureButtons.forEach(function(button) {
+        var originalOnClick = button.onclick;
+        button.onclick = function() {
+            if (originalOnClick) originalOnClick();
+            hideFiguresContainer();
+        }
+    });
+}
+
+
+
+// Ensure the hide function is assigned after the page loads
+window.onload = assignHideFunction;
 
 document.addEventListener("DOMContentLoaded", function() {
  
@@ -762,15 +760,21 @@ const stopButton = document.getElementById('stopButton');
 
 playButton.addEventListener('click', () => {
   musicPlayer.play();
+  toggleSetting(); // Close settings panel after clicking play
+
 });
 
 pauseButton.addEventListener('click', () => {
   musicPlayer.pause();
+  toggleSetting(); // Close settings panel after clicking play
+
 });
 
 stopButton.addEventListener('click', () => {
   musicPlayer.pause();
   musicPlayer.currentTime = 0;
+  toggleSetting(); // Close settings panel after clicking play
+
 });
 
 
@@ -812,6 +816,8 @@ function downloadCSV(filename, text) {
 document.getElementById('downloadBtn').addEventListener('click', function() {
     const csvString = matrixToCSV(matrix_mousePosition);
     downloadCSV('matrix_export.csv', csvString);
+    toggleSetting(); // Close settings panel after clicking play
+
 });
 
 
