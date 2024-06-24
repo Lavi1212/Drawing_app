@@ -6,13 +6,12 @@
   <title>ColoringPage</title>
   <style>
 
-      body {
-
+    body {
   font-family: Arial, sans-serif;
   color: #333;
   margin: 0;
   padding: 0;
-  background-image: url('background.jpeg'); /* Add this line */
+  background-image: url('C:/Users/Leana Assouline/Desktop/finalProj/icon/background.jpg'); /* Add this line */
   background-size: cover; /* Ensure the background image covers the entire area */
   background-position: center; /* Center the background image */
   background-repeat: no-repeat; /* Prevent the background image from repeating */
@@ -41,11 +40,11 @@
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-
-.color-pick {
+.color-pick{
   max-width: auto;
-  max-height:450px;
+  max-height: 450px;
 }
+
 
 /*column right- reset undo and save*/
 .button-container1 {
@@ -148,17 +147,20 @@ input[type="file"]::-webkit-file-upload-button {
 }
 .palette-container {
   position: absolute;
-  top: -3px;
-  left: -150px; 
-  width: 100px; /* Set the width */
-  height: 428px; /* Set the height */
+  top: -2px;
+  left: -280px; 
+  width: 220px; /* Set the width */
+  height: 420px; /* Set the height */
   background-color: white;
   border: 5px solid #000;
   border-radius: 5px;
-  padding: 10px;
+  padding: 15px;
   overflow-y: hidden; /* Add scrollbars if content exceeds height */
   z-index: 10; /* Ensure it appears on top of other elements */
+  background-color: #d1e2f9;
+
 }
+
 
 
 .palette-container.show {
@@ -169,10 +171,11 @@ input[type="file"]::-webkit-file-upload-button {
 
 .palette-container button {
   width: 100px; /* Set width for each figure button */
-  height: 100px; /* Set height for each figure button */
+  height: 120px; /* Set height for each figure button */
   border: 2px solid #000; /* Add border around each figure button */
   border-radius: 5px; /* Add border radius for rounded corners */
   cursor: pointer;
+  
 }
 
 
@@ -187,8 +190,8 @@ input[type="file"]::-webkit-file-upload-button {
     position: absolute;
     display: flex;
     flex-direction: row; /* Arrange items in a row */
-    left: 800px; /* Center horizontally */
-    top: 39px; /* Adjust the top position to move it lower */
+    left: 743px; /* Center horizontally */
+    top: 40px; /* Adjust the top position to move it lower */
     transform: translateX(-50%); /* Center horizontally using transform */
     width: 100px; /* Set a fixed width for the color palette */
     height: 50px; /* Set a fixed height for the color palette */
@@ -244,8 +247,8 @@ input[type="file"]::-webkit-file-upload-button {
   position: static;
   display: flex;
   flex-direction: row; /* Arrange items in a row */
-  margin-top:-515px;
-  margin-left:100px;
+  margin-top: -515px;
+  margin-left:10px;
   width: auto; /* Allow width to adjust based on content */
   height: auto; /* Allow height to adjust based on content */
 }
@@ -335,7 +338,7 @@ input[type="file"]::-webkit-file-upload-button {
   position: absolute;
   display: flex;
   flex-direction: row; /* Arrange items in a row */
-  left: 200px; /* Center horizontally */
+  left: 79px; /* Center horizontally */
   top: 40px; /* Adjust the top position to move it lower */
   transform: translateX(-50%); /* Center horizontally using transform */
   gap: 10px; /* Add space between the squares */
@@ -356,10 +359,10 @@ input[type="file"]::-webkit-file-upload-button {
 .settings-screen {
   display: none; /* Hide by default */
   position: absolute;
-  top: -20px; /* Adjust the top position */
+  top: 10px; /* Adjust the top position */
   width: 1200px; /* Set the width */
-  height: 550px; /* Set the height */
-  left: -150px; /* Center horizontally */
+  height: 530px; /* Set the height */
+  left: -20px; /* Center horizontally */
   background-color: #d1e2f9;
   border: 2px solid #000;
   border-radius: 5px;
@@ -558,6 +561,26 @@ body.secondary-palette-visible .brush-size-container,
 body.secondary-palette-visible .settings-container {
   display: none;
 }
+
+#downloadBtn {
+  width: 100%; /* Make the button fill its container width */
+  height: 40px; /* Set button height */
+  margin-bottom: 10px; /* Add margin at the bottom */
+  border: 2px solid #000; /* Add border */
+  border-radius: 5px; /* Add border radius for rounded corners */
+  background-color: #fff; /* Set background color */
+  color: #000; /* Set text color */
+  font-size: 16px; /* Adjust font size */
+  cursor: pointer; /* Show pointer cursor on hover */
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  justify-content: center; /* Center items horizontally */
+}
+
+#downloadBtn:hover {
+  background-color: #ddd; /* Change background color on hover */
+}
+
     
   </style>
   
