@@ -1,4 +1,3 @@
-document.getElementById('fileInput').addEventListener('change', handleFileSelect);
 
 const canvas = document.getElementById('imageCanvas');
 const ctx = canvas.getContext('2d');
@@ -6,18 +5,23 @@ const rect = canvas.getBoundingClientRect();
 const colorPicker = document.getElementById('colorPicker');
 const brushSizeSlider = document.getElementById('brushSize');
 const brushSizeDisplay = document.getElementById('brushSizeValue');
-const undoButton = document.getElementById('undoButton'); // Assuming you have an undo button with this ID
+const canvasContainer = document.getElementById('canvas-container');
+const canvasWidth = canvas.width;
+const canvasHeight = canvas.height;
+const containerWidth = canvasContainer.clientWidth;
+const containerHeight = canvasContainer.clientHeight;
 
-
-let originalData,
+let originalData,originalImageData,
     isPenMode = false, isPencilMode = false, isEraserMode = false,
     isDrawing = false, isRectangleMode = false, isCircleMode = false,
     isTriangleMode = false, isLineMode = false,
-    startX, startY ,currentX=0,currentY=0, flag=0,t=0, lastX=0, lastY=0, clientXWithinThreshold, clientYWithinThreshold, starttimerX, starttimerY ;
+    startX, startY,start_drawingX, start_drawingY ,currentX=0,currentY=0, flag=0,t=0, lastX=0, lastY=0, clientXWithinThreshold, clientYWithinThreshold, starttimerX, starttimerY ;
 let actionsStack = [];
 let brushSize = 10;
 let eraserSize = brushSize;
 let timeoutId = null;
+let timesetting1;
+let  movement_check=0;
 let matrix_mousePosition = [];
 let row=0;
 
@@ -28,23 +32,6 @@ for (let i = 0; i < 100; i++) {
     }
 }
 
-
-canvas.addEventListener("mousedown", startDraw);
-canvas.addEventListener("mousemove", Drawing);
-canvas.addEventListener("mouseleave", stopdraw);
-undoButton.addEventListener("click", undoLastAction); 
-
-//canvas.addEventListener("mouseup", endDraw);
-
-
-const canvasContainer = document.getElementById('canvas-container');
-const canvasWidth = canvas.width;
-const canvasHeight = canvas.height;
-const containerWidth = canvasContainer.clientWidth;
-const containerHeight = canvasContainer.clientHeight;
-
-
-
 let originX = canvasWidth / 2;
 let originY = canvasHeight / 2;
 let isZoomInMode = false;
@@ -52,20 +39,18 @@ let isZoomOutMode = false;
 let isDragMode=false;
 let scale = 1;
 
-const zoomInButton = document.getElementById('ZoomIn');
-const zoomOutButton = document.getElementById('ZoomOut');
-const DragButton = document.getElementById('Drag');
-zoomInButton.addEventListener("click", activateZoomInMode);
-zoomOutButton.addEventListener("click", activateZoomOutMode);
-DragButton.addEventListener("click", activateDragMode);
-
-//canvas.addEventListener('mousedown', handleCanvasClick);
+canvas.addEventListener("mousedown", startDraw);
+canvas.addEventListener("mousemove", Drawing);
+canvas.addEventListener("mouseleave", stopdraw);
 
 
 function startDraw(event) {
-    
-    startX = event.offsetX;
-    startY = event.offsetY;
+    if (movement_check==1){
+        return;
+    }
+
+    start_drawingX = event.offsetX;
+    start_drawingY = event.offsetY;
 
  
     if (isZoomInMode) {
@@ -79,23 +64,23 @@ function startDraw(event) {
         updateTransform();
     }
     if (isDragMode){
-
-       // if (scale < 1) scale = 1;// Prevent scaling below the original size
         updateTransform();
     }
-    if (isDrawing){
+
+    if (isPenMode) {
+        isDrawing = false;
+        handleMouseDownPen(event);
+    }
+
+    else if (isDrawing){
         isDrawing=false; 
     }
-    else {
 
-    //console.log("rect.left:",rect.left);
-   // console.log("event.clientX:",event.clientX);
-   // console.log("startX:",startX);
-   // console.log("event.offsetX:",event.offsetX);
-
+    else if (!isDrawing) {
+        isDrawing = true;
     t=0;
    
-    isDrawing = true;
+   
     const color = colorPicker.value;
     ctx.beginPath(); // creating new path to draw
     ctx.strokeStyle = color;
@@ -105,129 +90,125 @@ function startDraw(event) {
     saveCanvasState();
     originalData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-    if (isPenMode) {
-        isDrawing = false;
-        handleMouseDownPen(event);
-    }
+   
 }
 }
 
 function Drawing(event) {
 
-    currentX =event.offsetX;
-    currentY = event.offsetY;
-    console.log("timesetting:",timesetting);
-    console.log("threshold:",threshold);
-
-
-    if (row < 100) {
+    if (row < 20000) {
         time=getCurrentTime();
         matrix_mousePosition[row] = `${time},${currentX},${currentY}`;
-   row++;
-}
-if (row==100){
-    console.log(matrix_mousePosition);
-    row++;
-}
-
-    if (isPenMode && t==0) {
-        startX = currentX;
-        startY = currentY;
+        row++;
     }
 
-    
+    currentX = event.offsetX;
+    currentY = event.offsetY;
+
     clientXWithinThreshold = Math.abs(currentX - startX) <= threshold;
     clientYWithinThreshold = Math.abs(currentY - startY) <= threshold;
 
-    if (t>0){
-        //console.log("t=",t);
-        clientXWithinThreshold = Math.abs(currentX - lastX) <= threshold;
-        clientYWithinThreshold = Math.abs(currentY - lastY) <= threshold;
-    }
-
-   
-
-   // console.log("currentX:",currentX);
-    //console.log("lastY:",lastY);
-   // console.log("currentY:",currentY);
-    
     if (clientXWithinThreshold && clientYWithinThreshold) {
-        //console.log("notmoved, timeoutId=",timeoutId);
-    
-        if (!timeoutId) {
-            starttimerX= currentX;
-            starttimerY= currentY;
-            console.log("starttimerX:",currentX);
-            console.log("starttimerY:",currentY);
+        if (!timeoutId){//Starting the timecount
+            startX = currentX;
+            startY = currentY;
             timeoutId = setTimeout(() => {
-                //console.log("notmoved,timeoutId=1? ",timeoutId);
-                if (isDrawing) {
-                    isDrawing = false;
-                    //console.log("isDrawing is false");
-                    timeoutId = null;
+                movement_check=1;       
+                 if (isPenMode) { handleMouseDownPen(event); }
+                 
+                 else if (isZoomInMode) {
+                    scale = scale * 2;
+                    updateTransform(); 
+                }
             
+                else if (isZoomOutMode){
+                    scale /= 2;
+                    if (scale < 1) scale = 1;// Prevent scaling below the original size
+                        updateTransform();
+                    }
+            
+                else if (isDragMode){
+                      updateTransform();
+                    }
+
+                else if (isDrawing){
+                    isDrawing=false;
                 }
-                if (isPenMode) {
-                    flag=1;
-                    handleMouseDownPen(event);
-                    //console.log("handleMouseDownPen");
-                    flag=0;
-                    timeoutId = null;
+
+                else if  (!isDrawing){
+                    isDrawing=true;
                 }
-          }, timesetting); // 1000 milliseconds = 1 seconds
-        }
-        else{
-            clientXWithinThreshold = Math.abs(currentX - starttimerX) <= threshold;
-            clientYWithinThreshold = Math.abs(currentY - starttimerY) <= threshold;
-            if (!(clientXWithinThreshold) || !(clientYWithinThreshold)){
-                clearTimeout(timeoutId);
-                timeoutId = null;
-            }
-        }
-    }
+        
+                    }, timesetting); }
+                }
     else{
         clearTimeout(timeoutId);
         timeoutId = null;
-       // console.log("else, timeoutId=",timeoutId);
-    } 
+        startX = currentX; //startX goes back to current X
+        startY = currentY;
+        movement_check=0;
+    }
+console.log(movement_check);
 
-    if (!isDrawing) return; // if isDrawing is false return from here
-    ctx.putImageData(originalData, 0, 0); // adding copied canvas data on to this canvas
-    //console.log("check2/n");
-  
- 
+    if (movement_check==1){
 
-    if (isPencilMode) {
-        ctx.lineTo(currentX, currentY); // creating line according to the mouse pointer
-        ctx.stroke(); // drawing/filling line with color
-    } else if (isEraserMode) {
-        ctx.strokeStyle = "#fff";
-        ctx.lineTo(currentX, currentY); // creating line according to the mouse pointer
-        ctx.stroke();
-    } else if (isRectangleMode) {
-        ctx.strokeRect(startX, startY, currentX - startX,currentY-startY);
-    } else if (isCircleMode) {
-        drawCircle(ctx, startX, startY, currentX, currentY);
-    } else if (isLineMode) {
-        ctx.beginPath(); // Begins a new path
-        ctx.moveTo(startX, startY); // Moves the starting point of the path to the specified coordinates
-        ctx.lineTo(currentX, currentY); // Draws a straight line from the current position to the specified end point
-        ctx.stroke();
-    } else if (isTriangleMode){ //Draw Triangle
-        ctx.beginPath();
-        ctx.moveTo(startX, startY); // Move to the first vertex of the triangle
-        ctx.lineTo(currentX, currentY); // Draw a line to the second vertex based on mouse position
-        ctx.lineTo(startX * 2 - startX, currentY); // Draw a line to the third vertex based on mouse position
-        ctx.closePath();
-        ctx.stroke();
+        clearTimeout(timeoutId); //Restart the counting
+        timeoutId = null;
+        movement_check=0;
+        startX = currentX; 
+        startY = currentY;
+
+        if (isDrawing){ //starting now to draw because movement_check==1 conition
+            const color = colorPicker.value;
+            ctx.beginPath(); // creating new path to draw
+            ctx.strokeStyle = color;
+            ctx.lineWidth = brushSize;
+            
+            // Save the current canvas state before drawing
+            saveCanvasState();
+            originalData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            start_drawingX=currentX;
+            start_drawingY=currentY;
+            console.log("here");
+           }
+        
     }
 
-    t=1;
-    lastX = event.offsetX;
-    lastY = event.offsetY;
+    if (movement_check==0){
+        if (isDrawing==true){//allready drawing because movement_check==0 conition
+            ctx.putImageData(originalData, 0, 0); 
+            if (isPencilMode) {
+                ctx.lineTo(currentX, currentY); // creating line according to the mouse pointer
+                ctx.stroke(); // drawing/filling line with color
+            } else if (isEraserMode) {
+                ctx.strokeStyle = "#fff";
+                ctx.lineTo(currentX, currentY); // creating line according to the mouse pointer
+                ctx.stroke();
+            } else if (isRectangleMode) {
+                ctx.strokeRect(start_drawingX, start_drawingY, currentX - start_drawingX,currentY-start_drawingY);
+            } else if (isCircleMode) {
+                drawCircle(ctx, start_drawingX, start_drawingY, currentX, currentY);
+            } else if (isLineMode) {
+                ctx.beginPath(); // Begins a new path
+                ctx.moveTo(start_drawingX, start_drawingY); // Moves the starting point of the path to the specified coordinates
+                ctx.lineTo(currentX, currentY); // Draws a straight line from the current position to the specified end point
+                ctx.stroke();
+            } else if (isTriangleMode){ //Draw Triangle
+                ctx.beginPath();
+                ctx.moveTo(start_drawingX, start_drawingY); // Move to the first vertex of the triangle
+                ctx.lineTo(currentX, currentY); // Draw a line to the second vertex based on mouse position
+                ctx.lineTo(start_drawingX * 2 - start_drawingX, currentY); // Draw a line to the third vertex based on mouse position
+                ctx.closePath();
+                ctx.stroke();
+            }
 
-   
+        }
+    }
 }
+
+
+
+
 
 function stopdraw(event) {
 
@@ -253,8 +234,8 @@ saveCanvasState();
 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height); // Get the image data of the canvas
 const data = imageData.data; // Get the pixel data of the canvas
 const color = hexToRgb(colorPicker.value);
-let mouseX = event.offsetX;
-let mouseY = event.offsetY;
+let mouseX = currentX;
+let mouseY = currentY;
 if (flag ===1)
     {
         mouseX = currentX;
@@ -274,6 +255,8 @@ let columns_left_zero = Math.max(0,  Math.floor(rectWidth / 2) - mouseX );
 console.log("flag", flag);
 console.log("mouseX:", mouseX);
 console.log("mouseY:", mouseY);
+console.log("currentX:", currentX);
+console.log("currentY:", currentY);
 //console.log("xStart:", xStart);
 //console.log("yStart:", yStart);
 //console.log("xEnd:", xEnd);
@@ -351,10 +334,84 @@ ctx.putImageData(imageData, 0, 0);
 }
 
 
-function resetImage() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-  ctx.putImageData(originalImageData, 0, 0); // Restore original image
+
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                const canvas = document.getElementById('imageCanvas');
+                const ctx = canvas.getContext('2d');
+
+                // Calculate the scaling factor for resizing the image
+                const scaleFactor = Math.min(900 / img.width, 450 / img.height);
+
+                // Calculate the new dimensions for the resized image
+                const newWidth = img.width * scaleFactor;
+                const newHeight = img.height * scaleFactor;
+
+                // Clear the canvas to plain white
+                canvas.width = 900;
+                canvas.height = 450;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw the resized image on the canvas
+                ctx.drawImage(img, (canvas.width - newWidth) / 2, (canvas.height - newHeight) / 2, newWidth, newHeight);
+
+                // Store the original image data
+                originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                originalImageData = adjustBrightness(originalImageData);
+                ctx.putImageData(originalImageData, 0, 0);
+            };
+            img.src = event.target.result; // Set the source of the image to the result of FileReader
+        };
+
+        reader.readAsDataURL(file);
+    } else {
+        const canvas = document.getElementById('imageCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Clear the canvas to plain white
+        canvas.width = 900;
+        canvas.height = 450;
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Initialize originalImageData with white image data
+        originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
 }
+
+
+
+function resetImage() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+    ctx.putImageData(originalImageData, 0, 0); // Restore original image
+  }
+
+  function saveImage() {
+    const canvas = document.getElementById('imageCanvas');
+    const link = document.createElement("a");
+    link.download = `${Date.now()}.jpg`;
+    link.href = canvas.toDataURL();
+    link.click();
+  };
+
+  function undoLastAction() {
+    if (actionsStack.length > 0) {
+      const lastImageData = actionsStack.pop();
+      ctx.putImageData(lastImageData, 0, 0);
+     // console.log("Undo action. Stack size:", actionsStack.length);
+    } else {
+      //console.log("No actions to undo");
+    }
+  }
+
+
 
 function hexToRgb(hex) {
   const bigint = parseInt(hex.substring(1), 16);
@@ -364,9 +421,6 @@ function hexToRgb(hex) {
   return { r, g, b };
 }
 
-function selectColor(color) {
-document.getElementById('colorPicker').value = color;
-}
 
 function printRectangleValues(grayscaleValues) {
     const rectWidth = grayscaleValues[0].length;
@@ -405,48 +459,6 @@ ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
 ctx.stroke();
 }
 
-
-function handleFileSelect(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-
-        reader.onload = function(event) {
-            const img = new Image();
-            img.onload = function() {
-                // Calculate the scaling factor for resizing the image
-                const scaleFactor = Math.min(900 / img.width, 450 / img.height);
-
-                // Calculate the new dimensions for the resized image
-                const newWidth = img.width * scaleFactor;
-                const newHeight = img.height * scaleFactor;
-
-                canvas.width = 900;
-                canvas.height = 450;
-
-                // Draw the resized image on the canvas
-                ctx.drawImage(img, (canvas.width - newWidth) / 2, (canvas.height - newHeight) / 2, newWidth, newHeight);
-
-                // Store the original image data
-                originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                originalImageData = adjustBrightness(originalImageData);
-                ctx.putImageData(originalImageData, 0, 0);
-            };
-            img.src = event.target.result; // Set the source of the image to the result of FileReader
-        };
-
-        reader.readAsDataURL(file);
-    } else {
-        // Clear the canvas to plain white
-        canvas.width = canvas.width; // Clears the canvas
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // Initialize originalImageData with white image data
-        originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    }
-}
-
   
 const switchToPen = () => {t=0, isDragMode = false; isPenMode = true; Object.assign(window, {isZoomInMode: false ,isZoomOutMode: false, isPencilMode: false, isEraserMode: false, isRectangleMode: false, isCircleMode: false, isTriangleMode: false, isLineMode: false , isDrawing: false}); }
 const switchToPencil = () => {isDragMode = false; isPenMode = false; isZoomInMode = false ;isZoomOutMode = false; isPencilMode = true; isEraserMode = false; isDrawing = false; isRectangleMode = false; isCircleMode = false; isTriangleMode = false; isLineMode = false; }
@@ -467,6 +479,7 @@ function activateDragMode() {
 
 
 
+
 const matrix_color = [
     ["#eb5196", "#Fa9d00", "#CC00FF", "#006600", "#26867d", "#0F056B", "#8B4513", "#000000"],
     ["#bd1a21", "#DFAF2C", "#FF00FF", "#009900", "#33b3a6", "#4000FF", "#8b6c5c", "#303030"],
@@ -477,7 +490,7 @@ const matrix_color = [
   
  
 // Function to handle color selection from the main palette
-function selectColor(color) {
+function selectColor(color='#000000') {
     // Show the secondary color palette
     isDrawing = false;
     document.getElementById('colorPicker').value = color;
@@ -514,13 +527,27 @@ function addColorOption(color, column) {
     let colorOption = document.createElement("div");
     colorOption.classList.add("color-option");
     colorOption.style.backgroundColor = color;
-    colorOption.onclick = function() {
+
+    function selectColor() {
         // Set the colorPicker value to the selected color
         document.getElementById('colorPicker').value = color;
         document.getElementById("secondaryColorPalette").style.display = "none";
         document.body.classList.remove('secondary-palette-visible'); // Remove class to show brush-size-container and settings
         console.log("Secondary color selected:", color);
-    };
+    }
+
+    colorOption.onclick = selectColor;
+
+    let timeoutId;
+
+    colorOption.addEventListener('mouseenter', function() {
+        timeoutId = setTimeout(selectColor,timesetting); // 3 seconds delay
+    });
+
+    colorOption.addEventListener('mouseleave', function() {
+        clearTimeout(timeoutId); // Clear timeout on mouse leave
+    });
+
     column.appendChild(colorOption);
 }
 
@@ -606,36 +633,9 @@ function assignHideFunction() {
 // Ensure the hide function is assigned after the page loads
 window.onload = assignHideFunction;
 
-document.addEventListener("DOMContentLoaded", function() {
- 
-
-    // Set canvas size to match the size of its container
-    const canvasContainer = document.getElementById('canvas-container');
-    canvas.width = canvasContainer.offsetWidth;
-    canvas.height = canvasContainer.offsetHeight;
-
-    // Fill the canvas with white color
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Initialize originalImageData with white image data
-    originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-    // Optionally, you can add additional initialization code here
-});
 
 
 
-// Assuming you have a button with id "saveButton" in your HTML
-const saveButton = document.getElementById("saveButton");
-
-saveButton.addEventListener("click", () => {
-    const canvas = document.getElementById('imageCanvas');
-    const link = document.createElement("a");
-    link.download = `${Date.now()}.jpg`;
-    link.href = canvas.toDataURL();
-    link.click();
-});
 
 // Function to handle brush size change
 function setBrushSize(size) {
@@ -655,25 +655,28 @@ function toggleBrushSizeFrame() {
     const brushSizeFrame = document.getElementById('brushSizeFrame');
     brushSizeFrame.style.display = brushSizeFrame.style.display === 'none' ? 'block' : 'none';
 }
-//one click on the button
-document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('brushSizeFrame').style.display = 'none';
-});
 
-
-
-// Add event listener to toggle button
-document.getElementById('toggleBrushSizeButtons').addEventListener('click', toggleBrushSizeFrame);
 
 // Add event listeners to brush size buttons inside the frame
 document.querySelectorAll('.brush-size-buttons button').forEach(button => {
+    let timeoutId;
+
     button.addEventListener('click', function() {
         const size = parseInt(this.textContent);
         setBrushSize(size);
         toggleBrushSizeFrame(); // Close the frame after selecting a size
     });
-});
 
+    button.addEventListener('mouseenter', function() {
+        timeoutId = setTimeout(function() {
+            button.click(); // Trigger button click after delay
+        }, timesetting); 
+    });
+
+    button.addEventListener('mouseleave', function() {
+        clearTimeout(timeoutId); // Clear timeout on mouse leave
+    });
+});
 
 
 
@@ -689,15 +692,6 @@ function saveCanvasState() {
 
 }
 
-function undoLastAction() {
-    if (actionsStack.length >0) {
-        const lastImageData = actionsStack.pop();
-        ctx.putImageData(lastImageData, 0, 0);
-        console.log("Undo action. Stack size:", actionsStack.length);
-    } else {
-        console.log("No actions to undo");
-    }
-}
 
 
 
@@ -718,64 +712,51 @@ function toggleSetting() {
     }
 }
 
-// Event listener for the settings button to toggle settings panel visibility
-document.getElementById('settingsbutton').addEventListener('click', toggleSetting);
 
-// Event listener for Option 1 button (setting1) to set timesetting dynamically
-document.getElementById('setting1').addEventListener('click', function() {
-    // Handle Option 1 specific logic here if needed
-});
 
 // Event listener for timesetting buttons
+// Event listener for timesetting buttons
 document.querySelectorAll('.timesetting-button').forEach(button => {
+    let timeoutId;
+
     button.addEventListener('click', function() {
         timesetting = parseInt(this.dataset.value); // Update timesetting with button's data-value
         toggleSetting(); // Close the settings panel after selecting the option
     });
+
+    button.addEventListener('mouseenter', function() {
+        timeoutId = setTimeout(function() {
+            button.click(); // Trigger button click after delay
+        }, timesetting); 
+    });
+
+    button.addEventListener('mouseleave', function() {
+        clearTimeout(timeoutId); // Clear timeout on mouse leave
+    });
 });
 
-// Event listener for Option 2 button (setting2) to set threshold dynamically
-document.getElementById('setting2').addEventListener('click', function() {
-    // Handle Option 2 specific logic here if needed
-});
 
-// Event listener for threshold buttons
 document.querySelectorAll('.thresholdsetting-button').forEach(button => {
+    let timeoutId;
+
     button.addEventListener('click', function() {
         threshold = parseInt(this.dataset.value); // Update threshold with button's data-value
         toggleSetting(); // Close the settings panel after selecting the option
+    });
+
+    button.addEventListener('mouseenter', function() {
+        timeoutId = setTimeout(function() {
+            button.click(); // Trigger button click after delay
+        }, timesetting); 
+    });
+
+    button.addEventListener('mouseleave', function() {
+        clearTimeout(timeoutId); // Clear timeout on mouse leave
     });
 });
 
 
 
-
-
-
-//musicPlayer
-const musicPlayer = document.getElementById('musicPlayer');
-const playButton = document.getElementById('playButton');
-const pauseButton = document.getElementById('pauseButton');
-const stopButton = document.getElementById('stopButton');
-
-playButton.addEventListener('click', () => {
-  musicPlayer.play();
-  toggleSetting(); // Close settings panel after clicking play
-
-});
-
-pauseButton.addEventListener('click', () => {
-  musicPlayer.pause();
-  toggleSetting(); // Close settings panel after clicking play
-
-});
-
-stopButton.addEventListener('click', () => {
-  musicPlayer.pause();
-  musicPlayer.currentTime = 0;
-  toggleSetting(); // Close settings panel after clicking play
-
-});
 
 
 
@@ -812,14 +793,113 @@ function downloadCSV(filename, text) {
     document.body.removeChild(a);
 }
 
-// Step 4: Add event listener to download button
-document.getElementById('downloadBtn').addEventListener('click', function() {
+
+function MatrixDownload () {
     const csvString = matrixToCSV(matrix_mousePosition);
     downloadCSV('matrix_export.csv', csvString);
     toggleSetting(); // Close settings panel after clicking play
+};
 
+
+function playMusic (){
+    musicPlayer.play();
+    toggleSetting(); // Close settings panel after clicking play
+  };
+  
+  function pauseMusic() {
+    musicPlayer.pause();
+    toggleSetting(); // Close settings panel after clicking play
+  };
+  
+  function stopMusic()  {
+    musicPlayer.pause();
+    musicPlayer.currentTime = 0;
+    toggleSetting(); // Close settings panel after clicking play
+  };
+
+
+
+
+
+  document.addEventListener('DOMContentLoaded', function() {
+
+    const canvasContainer = document.getElementById('canvas-container');
+    canvas.width = canvasContainer.offsetWidth;
+    canvas.height = canvasContainer.offsetHeight;
+    // Fill the canvas with white color
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    originalImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+    document.getElementById('brushSizeFrame').style.display = 'none';
+
+    const undoButton = document.getElementById('undoButton');
+    const saveButton = document.getElementById('saveButton');
+    const resetImageButton = document.getElementById('resetImage');
+    const zoomInButton = document.getElementById('ZoomIn');
+    const zoomOutButton = document.getElementById('ZoomOut');
+    const DragButton = document.getElementById('Drag');
+    const switchToPenButton=document.getElementById('switchToPen');
+    const switchToEraserButton=document.getElementById('switchToEraser');
+    const switchToPencilButton=document.getElementById('switchToPencil');
+    const toggleFiguresButton=document.getElementById('toggleFigures');
+    const rectangleButton = document.getElementById('rectangleButton');
+    const lineButton = document.getElementById('lineButton');
+    const circleButton = document.getElementById('circleButton');
+    const triangleButton = document.getElementById('triangleButton');
+     //const elipsaButton = document.getElementById('elipsaButton');
+    //const triangleRectangleButton = document.getElementById('triangleRectangleButton');
+    const selectColorButton = document.getElementById('selectColor');
+    const toggleBrushSizeButton = document.getElementById('toggleBrushSizeButtons');
+    const settingsbutton=document.getElementById('settingsbutton');
+    const playButton = document.getElementById('playButton');
+    const pauseButton = document.getElementById('pauseButton');
+    const stopButton = document.getElementById('stopButton');
+    const MatrixButton = document.getElementById('downloadBtn');
+
+
+    resetImageButton.addEventListener('click', resetImage);
+    undoButton.addEventListener('click', undoLastAction);
+    saveButton.addEventListener('click', saveImage);
+    zoomInButton.addEventListener("click", activateZoomInMode);
+    zoomOutButton.addEventListener("click", activateZoomOutMode);
+    DragButton.addEventListener("click", activateDragMode);
+    switchToPenButton.addEventListener("click", switchToPen);
+    switchToEraserButton.addEventListener("click", switchToEraser);
+    switchToPencilButton.addEventListener("click", switchToPencil);
+    toggleFiguresButton.addEventListener("click", toggleFigures);
+    rectangleButton.addEventListener('click', switchToRectangle);
+    lineButton.addEventListener('click', switchToLine);
+    circleButton.addEventListener('click', switchToCircle);
+    triangleButton.addEventListener('click', switchToTriangle);
+    //elipsaButton.addEventListener('click', switchToElipsa);
+    //triangleRectangleButton.addEventListener('click', switchToTriangleRectangle);
+    selectColorButton.addEventListener('click', selectColor);
+    toggleBrushSizeButton.addEventListener('click',toggleBrushSizeFrame);
+    settingsbutton.addEventListener('click',toggleSetting);
+    playButton.addEventListener('click',playMusic);
+    pauseButton.addEventListener('click',pauseMusic);
+    stopButton.addEventListener('click',stopMusic);
+    MatrixButton.addEventListener('click',MatrixDownload);
+
+    // Example: handle hover delay (optional)
+    [undoButton, saveButton, resetImageButton,zoomInButton,zoomOutButton,DragButton
+        ,switchToPenButton,switchToEraserButton,switchToPencilButton ,toggleFiguresButton,
+        rectangleButton,lineButton ,circleButton,elipsaButton,triangleButton,triangleRectangleButton,
+        selectColorButton,toggleBrushSizeButton,settingsbutton, playButton,pauseButton,stopButton,MatrixButton
+    ].forEach(button => {
+        let timeoutId;
+
+        button.addEventListener('mouseenter', function() {
+            timeoutId = setTimeout(function() {
+                button.click(); // Trigger button click after delay
+            }, timesetting); 
+        });
+
+        button.addEventListener('mouseleave', function() {
+            clearTimeout(timeoutId); // Clear timeout on mouse leave
+        });
+    });
 });
-
-
 
 
