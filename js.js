@@ -10,7 +10,7 @@ const canvasWidth = canvas.width;
 const canvasHeight = canvas.height;
 const containerWidth = canvasContainer.clientWidth;
 const containerHeight = canvasContainer.clientHeight;
-
+//check
 let originalData,originalImageData,
     isPenMode = false, isPencilMode = false, isEraserMode = false,
     isDrawing = false, isRectangleMode = false, isCircleMode = false,
